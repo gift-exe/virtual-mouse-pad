@@ -1,8 +1,10 @@
 import cv2
 import mediapipe as mp
 import time
-from mouse import move_mouse
 import pyautogui as pag
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
+import queue
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -15,22 +17,20 @@ X, Y = 1350, 750
 SMOOTHING = 5
 prev_x, prev_y = 0, 0
 smooth_x, smooth_y = 0, 0
+x_, y_ = 0, 0
 
 FPS_LIMIT = 10
 last_frame_time = 0
 frame_time = 1.0 / FPS_LIMIT
 
-hand_solution = mp.solutions.hands
-hands = hand_solution.Hands(
-        static_image_mode=False,  # Set to False to detect hands in video
-        max_num_hands=1,  # Detect only one hand to reduce processing
-        min_detection_confidence=0.7,
-        min_tracking_confidence=0.5
-    )
+frame_queue = queue.Queue()
+
+
 
 def move_mouse(x, y,):
-    global smooth_x, smooth_y, prev_x, prev_y
-
+    
+    global smooth_x, smooth_y, prev_x, prev_y, x_, y_
+    x_, y_ = x, y
     x, y = round(x, 2), round(y, 2)
     x_cord, y_cord = round(x*X), round(y*Y)
     
@@ -55,10 +55,8 @@ def calculate_fps(image):
 
 def process_frame(frame_id, image, hands):
 
-    image = cv2.flip(image, 1)
-
     calculate_fps(image)
-
+    
     #hand recognition
     recognize_hands = hands.process(image)
     if recognize_hands.multi_hand_landmarks: 
@@ -73,36 +71,70 @@ def process_frame(frame_id, image, hands):
     
     return frame_id, image
 
-        # contains data on recognized hand landmarks (e.g position of index, thumb, pinky etc)
-        # for datapoint_id, point in enumerate(hand.landmark): 
-            # h, w, c = image.shape
-            # x, y = int(point.x * w), int(point.y * h)
-            # cv2.circle(image, (x, y), 3, (255, 0, 255), cv2.FILLED)
-
-def main(frame_time, hands):
-
-
-    video_cap = cv2.VideoCapture(0) # use laptop's camera
+def display_frame():
+    last_displayed_id = 0
+    frames_buffer = {}
 
     while True:
+        frame_id, image = frame_queue.get()
+        frames_buffer[frame_id] = image
 
-        start_time = time.time()
-        success, image = video_cap.read()
-        if success:
-            # main stuff
-            process_frame(image, hands)
-
-
-            # frame limiting when hands are being detected, so that we would not process too many frames 
-            # (since somee frrames might have fluctuations in finger position)
-            end_time = time.time()
-            elapsed_time = end_time - start_time
-            time_to_wait = max(0, frame_time - elapsed_time)
-            time.sleep(time_to_wait)
-
-
-            cv2.imshow('CamOutput', image)
+        while last_displayed_id + 1 in frames_buffer:
+            last_displayed_id += 1
+            frame = frames_buffer.pop(last_displayed_id)
+            cv2.imshow('CamOutput', frame)
             cv2.waitKey(1)
+    
+
+def main():
+
+    video_cap = cv2.VideoCapture(0) # use laptop's camera
+    video_cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    video_cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+
+    hand_solution = mp.solutions.hands
+    hands = hand_solution.Hands(
+            static_image_mode=False,  # Set to False to detect hands in video
+            max_num_hands=1,  # Detect only one hand to reduce processing
+            min_detection_confidence=0.7,
+            min_tracking_confidence=0.5
+        )
+    
+    frame_id = 0
+
+    display_thread = threading.Thread(target=display_frame, daemon=True)
+    display_thread.start()
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {}
+
+        while True:
+            start_time = time.time()
+            success, image = video_cap.read()
+
+            if success:
+                # main stuff
+                image = cv2.flip(image, 1)
+
+                frame_id += 1
+                future = executor.submit(process_frame, frame_id, image, hands)
+
+                futures[future] = frame_id
+
+                for future in as_completed(futures):
+                    frame_id = futures.pop(future)
+                    result_frame_id, processed_image = future.result()
+                    frame_queue.put((result_frame_id, processed_image))
+
+
+                # frame limiting when hands are being detected, so that we would not process too many frames 
+                # (since somee frrames might have fluctuations in finger position)
+                end_time = time.time()
+                elapsed_time = end_time - start_time
+                time_to_wait = max(0, frame_time - elapsed_time)
+                time.sleep(time_to_wait)
+
 
 if __name__ == '__main__':
-    main(frame_time, hands)
+    main()

@@ -1,0 +1,2 @@
+- Multithreading does not really improve the performance of the system (well atlease for now)
+    - I feel the reason could prbably be because of python's GIL ... I do not think it is time to "fix" this issue yet
