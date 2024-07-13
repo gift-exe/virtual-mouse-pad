@@ -1,8 +1,8 @@
-- Implement mouse acceleration:
-    - If there's an acceleration in finger movement, then the mouse cursor movement speed should be accelerated.
 - Implement relative mouse movement: 
     - let the mouse continue from where it was, when the finger is recognized
     - instead of going to an "initial" position
+- Implement mouse acceleration:
+    - If there's an acceleration in finger movement, then the mouse cursor movement speed should be accelerated.
 - Implement clicking
     - I still cannot think of a neat mechanism for clicking
 - Implement scrolling 

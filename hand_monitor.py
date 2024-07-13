@@ -12,20 +12,19 @@ warnings.filterwarnings('ignore')
 INDEX_FINGER = 8
 MIDDLE_FINGER = 12
 
-X, Y = 1350, 750
+X, Y = pag.size()
 
 SMOOTHING = 5
 prev_x, prev_y = 0, 0
 smooth_x, smooth_y = 0, 0
-x_, y_ = 0, 0
+init_x, init_y = pag.position()
+
 
 FPS_LIMIT = 10
 last_frame_time = 0
 frame_time = 1.0 / FPS_LIMIT
 
 frame_queue = queue.Queue()
-
-
 
 def move_mouse(x, y,):
     
@@ -41,7 +40,24 @@ def move_mouse(x, y,):
 
     print(f'{x} -> {smooth_x}, {y} -> {smooth_y}')
 
-    pag.moveTo(smooth_x, smooth_y)
+    pag.moveTo(x_cord, y_cord)
+
+def move_mouse_rel(x, y):
+    global smooth_x, smooth_y, prev_x, prev_y
+
+    current_x, current_y = pag.position()
+    x, y = round(x, 2), round(y, 2)
+    delta_x, delta_y = (x - (current_x / X)) * X, (y - (current_y / Y)) * Y
+    
+    # Smoothing mouse coords value (moving average)
+    smooth_x = (prev_x * (SMOOTHING - 1) + delta_x) / SMOOTHING
+    smooth_y = (prev_y * (SMOOTHING - 1) + delta_y) / SMOOTHING
+
+    prev_x, prev_y = smooth_x, smooth_y
+    
+    print(f'{x} -> {current_x}, {y} -> {current_y}')
+
+    pag.moveRel(smooth_x, smooth_y)
 
 def calculate_fps(image):
     global last_frame_time
@@ -63,7 +79,7 @@ def process_frame(frame_id, image, hands):
         hand = recognize_hands.multi_hand_landmarks[0] # contains data on recognize hands
         index_cords = hand.landmark[INDEX_FINGER] # extract the position of the index finger
         
-        move_mouse(index_cords.x, index_cords.y)
+        move_mouse_rel(index_cords.x, index_cords.y)
         
         h, w, c = image.shape
         x, y = int(index_cords.x * w), int(index_cords.y * h)
