@@ -1,6 +1,6 @@
 - Implement relative mouse movement: 
-    - let the mouse continue from where it was, when the finger is recognized
-    - instead of going to an "initial" position
+    - let the mouse continue from where it was, when the finger is recognized [DONE]
+    - instead of going to an "initial" position [DONE]
 - Implement mouse acceleration:
     - If there's an acceleration in finger movement, then the mouse cursor movement speed should be accelerated.
 - Implement clicking
@@ -8,3 +8,6 @@
 - Implement scrolling 
     - Two fingers together (index and middle finger) would set a trigger for scrolling
     - A change in position of these fingers across the x and y axis would be used to determin scroll direction
+- Try out new smoothing techniques, moving average has some issues:
+    - Low Pass Filter
+    - Exponential Moving Average
