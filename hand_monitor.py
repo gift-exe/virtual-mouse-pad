@@ -41,7 +41,7 @@ def process_frame(frame_id, image, hands):
 
         if mouse.IS_DETECTED == 0: mouse.IS_DETECTED = 1
         
-        move_mouse_rel(index_cords.x, index_cords.y)
+        move_mouse_accelerated(index_cords.x, index_cords.y)
         
         h, w, c = image.shape
         x, y = int(index_cords.x * w), int(index_cords.y * h)
