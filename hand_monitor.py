@@ -40,6 +40,8 @@ def process_frame(frame_id, image, hands):
         index_cords = hand.landmark[INDEX_FINGER] # extract the position of the index finger
 
         if mouse.IS_DETECTED == 0: mouse.IS_DETECTED = 1
+
+        print(f'z-index -> {round(index_cords.z, 3)}')
         
         move_mouse_accelerated(index_cords.x, index_cords.y)
         
@@ -78,8 +80,8 @@ def main():
     hands = hand_solution.Hands(
             static_image_mode=False,  # Set to False to detect hands in video
             max_num_hands=1,  # Detect only one hand to reduce processing
-            min_detection_confidence=0.7,
-            min_tracking_confidence=0.5
+            min_detection_confidence=0.8,
+            min_tracking_confidence=0.8
         )
     
     frame_id = 0
@@ -119,3 +121,5 @@ def main():
     return
 if __name__ == '__main__':
     main()
+
+    '111079827211'

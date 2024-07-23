@@ -4,7 +4,7 @@ import time
 
 X, Y = pag.size()
 
-SMOOTHING = 5
+SMOOTHING = 2.5
 prev_x, prev_y = 0, 0
 smooth_x, smooth_y = 0, 0
 
@@ -114,7 +114,7 @@ def move_mouse_accelerated(x, y):
     accelerated_delta_x = round(delta_x + (1 + ACCELERATION_FACTOR * speed)) if delta_x > 0 else round(delta_x - (1 + ACCELERATION_FACTOR * speed))
     accelerated_delta_y = round(delta_y + (1 + ACCELERATION_FACTOR * speed)) if delta_y > 0 else round(delta_y - (1 + ACCELERATION_FACTOR * speed))
     
-    print(f'dx -> {delta_x} :: acc_x -> {accelerated_delta_x} :: dy -> {delta_y} :: acc_y -> {accelerated_delta_y} :: speed -> {round(speed)}')
+    #print(f'dx -> {delta_x} :: acc_x -> {accelerated_delta_x} :: dy -> {delta_y} :: acc_y -> {accelerated_delta_y} :: speed -> {round(speed)}')
 
     if IS_DETECTED == 1: IS_DETECTED = 2
     elif IS_DETECTED == 2: pag.moveRel(accelerated_delta_x, accelerated_delta_y)
